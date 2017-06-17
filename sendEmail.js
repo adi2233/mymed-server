@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 var mongoose = require('mongoose');
-var sendmail = require('sendmail')();
+var nodemailer = require('nodemailer');
 var myNoti = require('./models/notificationSchema');
 var mongoose = require('mongoose');
 config = {
@@ -52,6 +52,7 @@ db.on('reconnected', function () {
   console.log(mytoday);
 
   myNoti.find({},function(err, docs){
+    console.log('in the find function');
     for(var i=0; i<docs.length; i++)
     {
       email = docs[i].email;
@@ -90,16 +91,34 @@ db.on('reconnected', function () {
 
 function sendit(email, recommendation)
 {
-  console.log("sending email");
-  sendmail({
-    from: 'mymedicalpro@gmail.com',
-    to: email,
-    subject: 'Notification from my medical',
-    html: recommendation,
-  }, function(err, reply) {
-      console.log(err && err.stack);
-      console.dir(reply);
-    });
+var transporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true, // use SSL
+    auth: {
+        user: 'mymedicalpro@gmail.com',
+        pass: 'mymed123'
+    }
+});
+
+// setup e-mail data
+var mailOptions = {
+    from: '"MY MEDICAL " <mymedicalpro@gmail.com>', // sender address (who sends)
+    to: email, // receiver
+    subject: 'Notification', // Subject line
+    text: 'Hello world ', // plaintext body
+    html: recommendation
+};
+
+// send mail with defined transport object
+transporter.sendMail(mailOptions, function(error, info){
+    if(error){
+        return console.log(error);
+    }
+
+    console.log('Message sent: ' + info.response);
+});
+
 }
 
 
